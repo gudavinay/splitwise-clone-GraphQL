@@ -1,0 +1,26 @@
+export const LOGIN = 'LOGIN';
+export const ERROR = 'ERROR';
+export const LOGOUT = 'LOGOUT';
+export const SIGNUP = 'SIGNUP';
+
+export const GET_ALL_USER_EXPENSES = 'GET_ALL_USER_EXPENSES';
+export const SETTLE_UP = 'SETTLE_UP';
+export const FETCH_GROUPS = 'FETCH_GROUPS';
+export const ACCEPT_INVITE = 'ACCEPT_INVITE';
+export const GROUP_MEMBERS = 'GROUP_MEMBERS';
+export const UPDATE_GROUP = 'UPDATE_GROUP';
+
+export const ADD_EXPENSE = 'ADD_EXPENSE';
+export const GET_ALL_EXPENSES = 'GET_ALL_EXPENSES';
+export const GET_ALL_INDIVIDUAL_EXPENSES = 'GET_ALL_INDIVIDUAL_EXPENSES';
+export const EXIT_GROUP = 'EXIT_GROUP';
+
+export const FETCH_USERS = 'FETCH_USERS';
+export const NEW_GROUP = 'NEW_GROUP';
+export const UPLOAD_USER_PROFILE_PICTURE = 'UPLOAD_USER_PROFILE_PICTURE';
+
+export const UPDATE_USER_PROFILE = 'UPDATE_USER_PROFILE';
+export const GET_ALL_EXPENSES_FOR_RA = 'GET_ALL_EXPENSES_FOR_RA';
+
+export const POST_COMMENT = 'POST_COMMENT';
+export const DELETE_COMMENT = 'DELETE_COMMENT';
