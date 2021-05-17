@@ -4,10 +4,10 @@ import { Redirect } from 'react-router';
 import { Container, Row, Col, Alert } from 'react-bootstrap';
 import Navbar from '../LandingPage/Navbar';
 import logoSmall from '../../images/logoSmall.png';
-import { loginRedux } from '../../reduxOps/reduxActions/loginRedux';
-import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { getUserProfile } from '../Services/ControllerUtils';
+import { loginQuery } from '../../queries/queries';
+import { graphql, withApollo } from 'react-apollo';
 const jwt_decode = require('jwt-decode');
 
 //Define a Login Component
@@ -23,13 +23,21 @@ class Login extends Component {
 
     onSubmit =async  (event) => {
         event.preventDefault();
-        const data = {
-            email: this.state.email,
-            password: this.state.password
-        };
-        await this.props.loginRedux(data);
+        const {data} = await this.props.client.query({
+            query: loginQuery,
+            variables: { email: this.state.email,
+                      password: this.state.password },
+            // fetchPolicy: 'no-cache',
+          });
+        // await this.props.loginQuery({
+        //     variables: {
+        //       email: this.state.email,
+        //       password: this.state.password,
+        //     },
+        //   });
         this.setState({
-            loginClicked: true
+            loginClicked: true,
+            loginResp :JSON.parse(data.login)
         })
     }
 
@@ -39,10 +47,10 @@ class Login extends Component {
             redirectVar = <Redirect to="/home/s/dashboard" />
         }
         if (this.state.loginClicked) {
-            if (this.props.user && (this.props.user.id || this.props.user.name)) {
-            var decoded = jwt_decode(this.props.user.token);
-            console.log("decoded msg - login - ", decoded, this.props.user.token);
-                localStorage.setItem("userProfile", JSON.stringify(this.props.user));
+            if (this.state.loginResp && (this.state.loginResp.id || this.state.loginResp.name)) {
+            var decoded = jwt_decode(this.state.loginResp.token);
+            console.log("decoded msg - login - ", decoded, this.state.loginResp.token);
+                localStorage.setItem("userProfile", JSON.stringify(this.state.loginResp));
                 redirectVar = <Redirect to="/home/s/dashboard" />
             } else {
                 message = "Whoops! We couldn't find an account for that email address and password. Maybe try again.";
@@ -95,4 +103,5 @@ const mapStateToProps = state =>{
     });
 }
 
-export default connect(mapStateToProps, {loginRedux})(Login);
+// export default connect(mapStateToProps, {loginRedux})(Login);
+export default withApollo(Login);

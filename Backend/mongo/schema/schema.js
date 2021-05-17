@@ -1,6 +1,9 @@
 const graphql = require('graphql');
 const UserProfile = require('../models/user_profile');
 // const { getUserProfile } = require('../query/getUserProfile');
+const passwordHash = require('password-hash');
+const jwt = require('jsonwebtoken');
+const config = require('../../mongo/config')
 
 
 const {
@@ -98,16 +101,16 @@ const RootQuery = new GraphQLObjectType({
       },
     },
     login: {
-      type: UserProfileGQL,
+      type: GraphQLString,
       args: {
         email: { type: GraphQLString },
         password: { type: GraphQLString },
       },
-      async resolve(parent, args) {
-        return new Promise(async (resolve, reject) => {
+      resolve(parent, args) {
+        return new Promise((resolve, reject) => {
           UserProfile.findOne({ email: args.email.toUpperCase() }, function (err, result) {
             if (err) {
-              reject(err);
+              resolve(err);
             }
             if (result && result['password'] && passwordHash.verify(args.password, result['password'])) {
               const token = jwt.sign({ _id: result._id }, config.secret, {
@@ -120,22 +123,54 @@ const RootQuery = new GraphQLObjectType({
             } else {
               res = "Unsuccessful Login";
             }
-            resolve(res);
+            resolve(JSON.stringify(res));
           });
         });
       },
     },
   },
 });
-// const Mutation = new GraphQLObjectType({
-//   name: 'Mutation',
-//   fields: {
-//   },
-// });
+const Mutation = new GraphQLObjectType({
+  name: 'Mutation',
+  fields: {
+    signup: {
+      type: GraphQLString,
+      args: {
+        name: { type: GraphQLString },
+        email: { type: GraphQLString },
+        password: { type: GraphQLString },
+      },
+
+      resolve(parent, args) {
+        return new Promise((resolve, reject) => {
+          const data = {
+            email: args.email.toUpperCase(),
+            name: args.name,
+            password: passwordHash.generate(args.password)
+          };
+          const up = new UserProfile(data);
+          up.save(function (err, result) {
+            if (err) {
+              return resolve("ER_DUP_ENTRY");
+            }
+            const token = jwt.sign({ _id: result._id }, config.secret, {
+              expiresIn: 1008000
+            })
+            var data = JSON.parse(JSON.stringify(result));
+            delete data.password;
+            data.token = token;
+            res = data;
+            resolve(JSON.stringify(res));
+          });
+        });
+      },
+    },
+  },
+});
 
 const schema = new GraphQLSchema({
   query: RootQuery,
-  // mutation: Mutation,
+  mutation: Mutation,
 });
 
 module.exports = schema;

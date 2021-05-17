@@ -9,6 +9,8 @@ import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { Alert } from 'react-bootstrap';
 import { getUserProfile } from '../Services/ControllerUtils';
+import { graphql } from 'react-apollo';
+import { signupMutation } from '../../mutations/mutations';
 
 class SignUp extends Component {
     constructor(props) {
@@ -24,14 +26,16 @@ class SignUp extends Component {
 
     onSubmit = async (event) => {
         event.preventDefault();
-        const data = {
-            name: this.state.name,
-            email: this.state.email,
-            password: this.state.password
-        }
-        await this.props.signupRedux(data);
+        let {data} = await this.props.signupMutation({
+            variables: {
+              name: this.state.name,
+              email: this.state.email,
+              password: this.state.password,
+            },
+          });
         this.setState({
-            signupClicked: true
+            signupClicked: true,
+            signupResp: JSON.parse(data.signup)
         })
 
     }
@@ -43,10 +47,10 @@ class SignUp extends Component {
         }
         if (this.state.signupClicked) {
             console.log("PROPS in SINGUP after click ", this.state, this.props);
-            if (this.props.user && (this.props.user.id || this.props.user.name)) {
-                localStorage.setItem("userProfile", JSON.stringify(this.props.user));
+            if (this.state.signupResp && (this.state.signupResp.id || this.state.signupResp.name)) {
+                localStorage.setItem("userProfile", JSON.stringify(this.state.signupResp));
                 redirectVar = <Redirect to="/home/s/dashboard" />
-            } else if(this.props.user === 'ER_DUP_ENTRY'){
+            } else if(this.state.signupResp === 'ER_DUP_ENTRY'){
                 message = `This email already belongs to another account.`;
             }else{
                 message = `Some error occured`;
@@ -108,4 +112,6 @@ const mapStateToProps = state =>{
     });
 }
 
-export default connect(mapStateToProps, {signupRedux})(SignUp);
+export default graphql(signupMutation, { name: 'signupMutation' })(
+    SignUp
+  );
