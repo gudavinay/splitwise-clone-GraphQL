@@ -5,12 +5,14 @@ var bodyParser = require('body-parser');
 var cors = require('cors');
 var session = require('express-session');
 app.set('view engine', 'ejs');
-const UserProfile = require('../kafka-backend/mongo/models/user_profile')
-const Group = require('../kafka-backend/mongo/models/group')
-const Expenses = require('../kafka-backend/mongo/models/expenses')
+// const UserProfile = require('../kafka-backend/mongo/models/user_profile')
+// const Group = require('../kafka-backend/mongo/models/group')
+// const Expenses = require('../kafka-backend/mongo/models/expenses')
 var ObjectID = require('mongodb').ObjectID;
 const passwordHash = require('password-hash');
 const path = require('path');
+const {graphqlHTTP} = require('express-graphql');
+const schema = require('./schema/schema');
 
 var kafka = require('./kafka/client');
 const jwt = require('jsonwebtoken')
@@ -44,16 +46,24 @@ app.use(function (req, res, next) {
   next();
 });
 
+app.use("/graphql",graphqlHTTP({
+  schema,
+  graphiql: true
+}));
+
+
 const db = config.mongoURI;
 const mongoose = require('mongoose');
 
-mongoose.createConnection(db, {
+mongoose.connect(db, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   useCreateIndex: true,
   poolSize: 4
-}).then((err, result) => {
-  console.log("connected!!!");
+}).then((result) => {
+  console.log("connection to mongo Success!!!");
+}).catch(err=>{
+  console.log("connection to mongo failed!!!");
 });
 
 
