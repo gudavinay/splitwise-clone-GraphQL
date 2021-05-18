@@ -1,5 +1,6 @@
 const graphql = require('graphql');
 const UserProfile = require('../models/user_profile');
+const Group = require('../models/group');
 // const { getUserProfile } = require('../query/getUserProfile');
 const passwordHash = require('password-hash');
 const jwt = require('jsonwebtoken');
@@ -120,6 +121,33 @@ const RootQuery = new GraphQLObjectType({
               res.error = "Unsuccessful Login";
             }
             resolve(res);
+          });
+        });
+      },
+    },
+    fetchGroups: {
+      type: GraphQLString,
+      args: {
+        user_id: { type: GraphQLString },
+      },
+      resolve(parent, args) {
+        return new Promise((resolve, reject) => {
+          Group.find({ "user.user_id": args.user_id }, function (err, result) {
+            let res=[];
+            if(err){
+              resolve(res);
+            }
+            var data = [];
+            result.forEach(res => {
+              let obj = { name: res.name, group_id: res._id };
+              res.user.forEach(user => {
+                if (args.user_id == user.user_id) {
+                  obj['isAccepted'] = user.isAccepted;
+                }
+              });
+              data.push(obj);
+            });
+            resolve(JSON.stringify(data))
           });
         });
       },

@@ -6,8 +6,8 @@ import groupTagSVG from '../../assets/groupTag.svg'
 import allGroupsSVG from '../../assets/allGroups.svg'
 import dashboardSVG from '../../assets/dashboard.svg'
 import recentActivitiesSVG from '../../assets/recentActivities.svg'
-import { connect } from 'react-redux';
-import { fetchGroupsRedux } from '../../../reduxOps/reduxActions/allGroupsRedux'
+import { withApollo } from 'react-apollo';
+import { fetchGroupsQuery } from '../../../queries/queries';
 class Sidebar extends Component {
     constructor(props) {
         super(props);
@@ -18,15 +18,19 @@ class Sidebar extends Component {
     }
 
     async componentDidMount() {
-        await this.props.fetchGroupsRedux({user_id: getUserID()});
+        const {data} = await this.props.client.query({
+            query: fetchGroupsQuery,
+            variables: { user_id:getUserID()},
+          });
+          this.setState({groups:JSON.parse(data.fetchGroups)});
     }
 
-    componentDidUpdate(prevState){
-        if(prevState.groups !== this.props.groups){
-            localStorage.setItem("groupsInfo", JSON.stringify(this.props.groups))
-            this.setState({groups: this.props.groups})
-        }
-    }
+    // componentDidUpdate(prevState){
+    //     if(prevState.groups !== this.props.groups){
+    //         localStorage.setItem("groupsInfo", JSON.stringify(this.props.groups))
+    //         this.setState({groups: this.props.groups})
+    //     }
+    // }
 
     render() {
         // console.log("SIDEBARRRRRRR-------",this.props,this.state,this.props.location.pathname);
@@ -80,11 +84,4 @@ class Sidebar extends Component {
     }
 }
 
-const mapStateToProps = state =>{
-    console.log("state mapstatetoprops in sidebar",state);
-    return({
-        groups: state.allGroups.groupsInfo
-    });
-}
-
-export default connect(mapStateToProps, {fetchGroupsRedux})(Sidebar);
+export default withApollo(Sidebar);

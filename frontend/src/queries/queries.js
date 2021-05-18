@@ -17,6 +17,13 @@ query($email: String,$password: String) {
 }
 `;
 
+const fetchGroupsQuery = gql`
+query($user_id: String) {
+  fetchGroups(user_id:$user_id)
+}
+`;
+
 export {
   loginQuery,
+  fetchGroupsQuery,
 };

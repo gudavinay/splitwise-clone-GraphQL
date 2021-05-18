@@ -4,11 +4,9 @@ import { Redirect } from 'react-router';
 import { Container, Row, Col, Alert } from 'react-bootstrap';
 import Navbar from '../LandingPage/Navbar';
 import logoSmall from '../../images/logoSmall.png';
-import PropTypes from 'prop-types';
 import { getUserProfile } from '../Services/ControllerUtils';
 import { loginQuery } from '../../queries/queries';
-import { graphql, withApollo } from 'react-apollo';
-const jwt_decode = require('jwt-decode');
+import { withApollo } from 'react-apollo';
 
 //Define a Login Component
 class Login extends Component {
