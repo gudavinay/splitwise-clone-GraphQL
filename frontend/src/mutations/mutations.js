@@ -17,6 +17,20 @@ const signupMutation = gql`
   }
 `;
 
+
+const newGroupMutation = gql`
+  mutation newGroup($email: String, $groupName: String, $user_rec_id: String,$userIDArray:[String] ) {
+    newGroup(email:$email
+    groupName:$groupName
+    userIDArray:$userIDArray
+    user_rec_id:$user_rec_id
+    )
+  }
+`;
+
+
+
 export {
   signupMutation,
+  newGroupMutation
 };

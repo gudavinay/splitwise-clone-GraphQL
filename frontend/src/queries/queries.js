@@ -23,7 +23,17 @@ query($user_id: String) {
 }
 `;
 
+const fetchUsersQuery = gql`
+query{
+  fetchUsers{
+    name
+    email
+    _id
+  }
+}`;
+
 export {
   loginQuery,
   fetchGroupsQuery,
+  fetchUsersQuery,
 };

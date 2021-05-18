@@ -42,14 +42,16 @@ const GroupGQL = new GraphQLObjectType({
     name: { type: GraphQLString },
     profile_picture_url: { type: GraphQLString },
     user: new GraphQLList(UserStatusGQL),
+    error: { type: GraphQLString },
   }),
 });
+
 
 const UserStatusGQL = new GraphQLObjectType({
   name: "userstatus",
   fields: () => ({
     _id: { type: GraphQLID },
-    user_id: { type: GraphQLString },
+    user_id: { type: GraphQLID },
     isAccepted: { type: GraphQLString },
   }),
 });
@@ -58,7 +60,7 @@ const ExpensesGQL = new GraphQLObjectType({
   name: "expenses",
   fields: () => ({
     _id: { type: GraphQLID },
-    group_id: { type: GraphQLString },
+    group_id: { type: GraphQLID },
     description: { type: GraphQLString },
     paid_by: { type: GraphQLString },
     amount: { type: GraphQLString },
@@ -73,7 +75,7 @@ const PaidToUsersGQL = new GraphQLObjectType({
   name: "paidtousers",
   fields: () => ({
     _id: { type: GraphQLID },
-    paid_to: { type: GraphQLString },
+    paid_to: { type: GraphQLID },
     amount: { type: GraphQLString },
     settled: { type: GraphQLString },
   }),
@@ -83,6 +85,10 @@ const RootQuery = new GraphQLObjectType({
   name: 'RootQueryType',
   description: 'Root Query',
   fields: {
+
+
+
+
     getUserProfile: {
       // query{
       //   getUserProfile(_id:"6081f55943ceef78bb6549db"){
@@ -102,6 +108,10 @@ const RootQuery = new GraphQLObjectType({
         });
       },
     },
+
+
+
+
     login: {
       type: UserProfileGQL,
       args: {
@@ -125,6 +135,10 @@ const RootQuery = new GraphQLObjectType({
         });
       },
     },
+
+
+
+
     fetchGroups: {
       type: GraphQLString,
       args: {
@@ -133,9 +147,8 @@ const RootQuery = new GraphQLObjectType({
       resolve(parent, args) {
         return new Promise((resolve, reject) => {
           Group.find({ "user.user_id": args.user_id }, function (err, result) {
-            let res=[];
             if(err){
-              resolve(res);
+              resolve();
             }
             var data = [];
             result.forEach(res => {
@@ -152,11 +165,31 @@ const RootQuery = new GraphQLObjectType({
         });
       },
     },
+
+
+
+
+    fetchUsers: {
+      type: new GraphQLList(UserProfileGQL),
+      resolve(parent, args) {
+        return new Promise((resolve, reject) => {
+          UserProfile.find({}, function (err, result) {
+            if(err){
+              resolve();
+            }
+            resolve(JSON.parse(JSON.stringify(result).toLocaleLowerCase()));
+          });
+        });
+      },
+    },
   },
 });
 const Mutation = new GraphQLObjectType({
   name: 'Mutation',
   fields: {
+
+
+
     signup: {
       type: UserProfileGQL,
       args: {
@@ -164,7 +197,6 @@ const Mutation = new GraphQLObjectType({
         email: { type: GraphQLString },
         password: { type: GraphQLString },
       },
-
       resolve(parent, args) {
         return new Promise((resolve, reject) => {
           const data = {
@@ -181,6 +213,46 @@ const Mutation = new GraphQLObjectType({
               res = result;
             }
             resolve(res);
+          });
+        });
+      },
+    },
+
+
+
+    newGroup: {
+      type: GraphQLString,
+      args: {
+        email:{type:GraphQLString},
+        groupName:{type:GraphQLString},
+        user_rec_id:{type:GraphQLString},
+        userIDArray: { type: GraphQLList(GraphQLString) },
+      },
+      resolve(parent, args) {
+        return new Promise((resolve, reject) => {
+          // resolve(JSON.stringify(args))
+          var users = [];
+          args.userIDArray.forEach(user => {
+            const userData = {
+              user_id: user,
+              isAccepted: user == args.user_rec_id ? 1 : 0
+            };
+            users.push(userData);
+          });
+          const data = {
+            name: args.groupName,
+            admin_email: args.email,
+            user: users
+          };
+          const group = new Group(data);
+          group.save(function (err, result) {
+            let res = null;
+            if (err && err.message.includes("duplicate key")) {
+              res = "ER_DUP_ENTRY"
+            } else {
+              res = result;
+            }
+            resolve(JSON.stringify(res));
           });
         });
       },

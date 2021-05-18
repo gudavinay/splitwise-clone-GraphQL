@@ -6,9 +6,10 @@ import '../../splitwise.css'
 import { getUserEmail, getUserID, getUserName } from '../../Services/ControllerUtils';
 import crossSVG from '../../assets/cross.svg';
 import profileImage from '../../../images/profileImage.png'
-import { connect } from 'react-redux';
-import { fetchUsersRedux, newGroupRedux } from '../../../reduxOps/reduxActions/newGroupRedux';
-
+import { fetchUsersQuery } from '../../../queries/queries';
+import { withApollo } from 'react-apollo';
+import { graphql } from 'react-apollo';
+import { newGroupMutation } from '../../../mutations/mutations';
 class NewGroup extends Component {
     constructor(props) {
         super(props);
@@ -17,13 +18,16 @@ class NewGroup extends Component {
             fetchUsers: [],
             open: false,
             defaultCount: 4,
-            // selectedList: [(getUserName().toLowerCase() + " / " +  getUserEmail().toLowerCase())],
+            selectedList: [(getUserName().toLowerCase() + " / " +  getUserEmail().toLowerCase())],
             selected: null
         };
     }
 
     async componentDidMount() {
-        await this.props.fetchUsersRedux();
+        const {data} = await this.props.client.query({
+            query: fetchUsersQuery,
+          });
+          this.setState({fetchUsers:data.fetchUsers});
     }
 
     componentDidUpdate(prevState){
@@ -96,9 +100,9 @@ class NewGroup extends Component {
                                         <Col>
                                             <input style={{width:'51%', marginRight:'10px'}} id="newGroupPersons" onChange={(e) => this.setState({ selected: e.target.value })} type="text" list="email" placeholder="Search with Name or Email address"/>
                                             {this.state.selected && this.state.selected.length>2?(<datalist onChange={(e) => console.log("onchange", e)} id="email">
-                                                {/* {this.state.fetchUsers.map((element, index) =>
+                                                {this.state.fetchUsers.map((element, index) =>
                                                     <option key={element.id} value={element.id}>{element.name} / {element.email}</option>
-                                                )} */}
+                                                )}
                                             </datalist>):""}
                                             <Button style={{ margin: '1rem' ,backgroundColor:'#5bc5a7' ,borderColor:'#5bc5a7'}} disabled={!this.state.selected} onClick={(event) => {
                                                 var tempList = this.state.selectedList;
@@ -111,13 +115,13 @@ class NewGroup extends Component {
                                     </Row>
                                     <Row>
                                         <div style={{width:'55%', marginTop:'1rem'}}>
-                                            {/* {this.state.selectedList.map(user => (
+                                            {this.state.selectedList.map(user => (
                                                 <Row style={{height:'40px'}}>
                                                     <Col sm={10}>
                                                         <div key={user}> <img style={{borderRadius:'25px', height:'30px'}} src={profileImage} alt=""/> {user}</div>
                                                     </Col>
                                                     <Col sm={2}>
-                                                        { !user.includes(getUserEmail()) && <a onClick={(e)=>{
+                                                        { !user.includes(getUserEmail()) && <a href onClick={(e)=>{
                                                             console.log(e.target.id);
                                                             if(e.target.id){
                                                                 let tempList = this.state.selectedList;
@@ -130,7 +134,7 @@ class NewGroup extends Component {
                                                             }}><img value={user} id={user} alt="" src={crossSVG}/></a>}
                                                     </Col>
                                                 </Row>
-                                            ))} */}
+                                            ))}
                                         </div>
                                     </Row>
                                     <hr/>
@@ -149,14 +153,18 @@ class NewGroup extends Component {
                                                     });
                                                 });
                                                 console.log("userIDArray",userIDArray);
-                                                const data={
-                                                    groupName:this.state.groupName,
-                                                    email: getUserEmail(),
-                                                    user_rec_id: getUserID(),
-                                                    userIDArray:userIDArray,
-                                                    profilePicture: this.state.uploadedFile,
-                                                }
-                                                await this.props.newGroupRedux(data);
+                                                let {data} = await this.props.newGroupMutation({
+                                                    variables: {
+                                                        groupName:this.state.groupName,
+                                                        email: getUserEmail(),
+                                                        user_rec_id: getUserID(),
+                                                        userIDArray:userIDArray,
+                                                        profilePicture: this.state.uploadedFile,
+                                                    }
+                                                  });
+                                                  if(!data.newGroup.includes("ER_DUP_ENTRY")){
+                                                    this.props.history.push("/home/s/dashboard")
+                                                  }
                                             }} >Save</Button>
                                         </Col>
                                     </Row>
@@ -170,13 +178,6 @@ class NewGroup extends Component {
     }
 }
 
-const mapStateToProps = state =>{
-    console.log("state mapstatetoprops in newGroup",state);
-    return({
-        fetchUsers: state.newGroup.fetchUsers,
-        newGroup: state.newGroup.newGroup,
-        uploadedFile: state.newGroup.uploadedFile
-    });
-}
-
-export default connect(mapStateToProps, { fetchUsersRedux, newGroupRedux })(NewGroup);
+export default withApollo(graphql(newGroupMutation, { name: 'newGroupMutation' })(
+    NewGroup
+  ));
