@@ -27,17 +27,10 @@ class Login extends Component {
             query: loginQuery,
             variables: { email: this.state.email,
                       password: this.state.password },
-            // fetchPolicy: 'no-cache',
           });
-        // await this.props.loginQuery({
-        //     variables: {
-        //       email: this.state.email,
-        //       password: this.state.password,
-        //     },
-        //   });
         this.setState({
             loginClicked: true,
-            loginResp :JSON.parse(data.login)
+            loginResp :data.login
         })
     }
 
@@ -48,8 +41,8 @@ class Login extends Component {
         }
         if (this.state.loginClicked) {
             if (this.state.loginResp && (this.state.loginResp.id || this.state.loginResp.name)) {
-            var decoded = jwt_decode(this.state.loginResp.token);
-            console.log("decoded msg - login - ", decoded, this.state.loginResp.token);
+            // var decoded = jwt_decode(this.state.loginResp.token);
+            // console.log("decoded msg - login - ", decoded, this.state.loginResp.token);
                 localStorage.setItem("userProfile", JSON.stringify(this.state.loginResp));
                 redirectVar = <Redirect to="/home/s/dashboard" />
             } else {
@@ -90,18 +83,4 @@ class Login extends Component {
     }
 }
 
-Login.propTypes = {
-    loginRedux: PropTypes.func.isRequired,
-    user: PropTypes.object.isRequired
-}
-
-
-const mapStateToProps = state =>{
-    console.log("state mapstatetoprops in login",state);
-    return({
-        user: state.login.user
-    });
-}
-
-// export default connect(mapStateToProps, {loginRedux})(Login);
 export default withApollo(Login);

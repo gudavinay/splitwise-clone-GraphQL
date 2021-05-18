@@ -35,7 +35,7 @@ class SignUp extends Component {
           });
         this.setState({
             signupClicked: true,
-            signupResp: JSON.parse(data.signup)
+            signupResp: data.signup
         })
 
     }
@@ -50,7 +50,7 @@ class SignUp extends Component {
             if (this.state.signupResp && (this.state.signupResp.id || this.state.signupResp.name)) {
                 localStorage.setItem("userProfile", JSON.stringify(this.state.signupResp));
                 redirectVar = <Redirect to="/home/s/dashboard" />
-            } else if(this.state.signupResp === 'ER_DUP_ENTRY'){
+            } else if(this.state.signupResp.error === 'ER_DUP_ENTRY'){
                 message = `This email already belongs to another account.`;
             }else{
                 message = `Some error occured`;
@@ -97,19 +97,6 @@ class SignUp extends Component {
             </React.Fragment>
         )
     }
-}
-
-SignUp.propTypes = {
-    signupRedux: PropTypes.func.isRequired,
-    user: PropTypes.object.isRequired
-}
-
-
-const mapStateToProps = state =>{
-    console.log("state mapstatetoprops in signup",state);
-    return({
-        user: state.signup.user
-    });
 }
 
 export default graphql(signupMutation, { name: 'signupMutation' })(

@@ -29,6 +29,7 @@ const UserProfileGQL = new GraphQLObjectType({
     currency: { type: GraphQLString },
     timezone: { type: GraphQLString },
     language: { type: GraphQLString },
+    error: { type: GraphQLString },
   }),
 });
 
@@ -101,7 +102,7 @@ const RootQuery = new GraphQLObjectType({
       },
     },
     login: {
-      type: GraphQLString,
+      type: UserProfileGQL,
       args: {
         email: { type: GraphQLString },
         password: { type: GraphQLString },
@@ -109,21 +110,16 @@ const RootQuery = new GraphQLObjectType({
       resolve(parent, args) {
         return new Promise((resolve, reject) => {
           UserProfile.findOne({ email: args.email.toUpperCase() }, function (err, result) {
+            let res = {};
             if (err) {
               resolve(err);
             }
             if (result && result['password'] && passwordHash.verify(args.password, result['password'])) {
-              const token = jwt.sign({ _id: result._id }, config.secret, {
-                expiresIn: 1008000
-              })
-              var data = JSON.parse(JSON.stringify(result));
-              delete data.password;
-              data.token = token;
-              res = data;
+              res = result;
             } else {
-              res = "Unsuccessful Login";
+              res.error = "Unsuccessful Login";
             }
-            resolve(JSON.stringify(res));
+            resolve(res);
           });
         });
       },
@@ -134,7 +130,7 @@ const Mutation = new GraphQLObjectType({
   name: 'Mutation',
   fields: {
     signup: {
-      type: GraphQLString,
+      type: UserProfileGQL,
       args: {
         name: { type: GraphQLString },
         email: { type: GraphQLString },
@@ -150,17 +146,13 @@ const Mutation = new GraphQLObjectType({
           };
           const up = new UserProfile(data);
           up.save(function (err, result) {
-            if (err) {
-              return resolve("ER_DUP_ENTRY");
+            let res = {};
+            if (err && err.message.includes("duplicate key")) {
+              res.error = "ER_DUP_ENTRY"
+            } else {
+              res = result;
             }
-            const token = jwt.sign({ _id: result._id }, config.secret, {
-              expiresIn: 1008000
-            })
-            var data = JSON.parse(JSON.stringify(result));
-            delete data.password;
-            data.token = token;
-            res = data;
-            resolve(JSON.stringify(res));
+            resolve(res);
           });
         });
       },

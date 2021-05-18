@@ -1,8 +1,19 @@
 import { gql } from 'apollo-boost';
 
 const loginQuery = gql`
-query{
-  login(email:"user1@test.com",password:"password")
+query($email: String,$password: String) {
+  login(email:$email,password:$password){
+    _id
+    name
+    email
+    name
+    profilePicture
+    phone
+    currency
+    timezone
+    language
+    error
+  }
 }
 `;
 
