@@ -9,8 +9,10 @@ import downArrowSVG from '../../assets/downArrow.svg'
 import upArrowSVG from '../../assets/upArrow.svg'
 import chatSVG from '../../assets/chat.svg'
 import crossSVG from '../../assets/cross.svg'
-import { connect } from 'react-redux';
-import { getAllExpensesRedux, getAllIndividualExpensesRedux, addExpenseRedux, exitGroupRedux, postCommentRedux, deleteCommentRedux } from '../../../reduxOps/reduxActions/groupsInfoRedux';
+import { withApollo } from 'react-apollo';
+import { getAllExpensesQuery } from "../../../queries/queries";
+import { addExpenseMutation } from "../../../mutations/mutations";
+import { graphql } from 'react-apollo';
 
 class GroupInfo extends Component {
   constructor(props) {
@@ -21,24 +23,39 @@ class GroupInfo extends Component {
       amount: null,
       error: false,
       allExpenses: null,
-      group_id: this.props.match ? this.props.match.params.id: null,
+      group_id: this.props.match.params.id,
       open: false
     };
   }
 
   onSubmit = async (event) => {
     event.preventDefault();
-    const data = {
-      description: this.state.description,
-      amount: parseFloat(this.state.amount),
-      group_id: this.props.match.params.id,
-      paid_by: "" + getUserID()
-    };
-    await this.props.addExpenseRedux(data);
+    let {data} = await this.props.addExpenseMutation({
+      variables: {
+        description: this.state.description,
+        amount: this.state.amount,
+        group_id: this.props.match.params.id,
+        paid_by: "" + getUserID()
+      }
+    });
+    this.setState({show:false})
+    this.loadAllExpenses();
   }
+
+  async loadAllExpenses(){
+    const {data} = await this.props.client.query({
+      query:getAllExpensesQuery,
+      variables:{
+        group_id:this.props.match.params.id
+      }
+    });
+    this.setState({allExpenses:data.getAllExpenses})
+  }
+
   async componentDidMount() {
-    await this.props.getAllExpensesRedux({ group_id: this.props.match.params.id });
-    await this.props.getAllIndividualExpensesRedux({ group_id: this.props.match.params.id });
+    // await this.props.getAllExpensesRedux({ group_id: this.props.match.params.id });
+    this.loadAllExpenses();
+    // await this.props.getAllIndividualExpensesRedux({ group_id: this.props.match.params.id });
   }
 
 
@@ -67,8 +84,8 @@ class GroupInfo extends Component {
 
   async componentDidUpdate(prevState) {
     if(prevState.match.params.id != this.props.match.params.id){
-      await this.props.getAllExpensesRedux({ group_id: this.props.match.params.id });
-      await this.props.getAllIndividualExpensesRedux({ group_id: this.props.match.params.id });
+      // await this.props.getAllExpensesRedux({ group_id: this.props.match.params.id });
+      // await this.props.getAllIndividualExpensesRedux({ group_id: this.props.match.params.id });
     }
     if (prevState.allExpenses !== this.props.allExpenses) {
       this.setState({ allExpenses: this.props.allExpenses })
@@ -82,20 +99,20 @@ class GroupInfo extends Component {
     if (this.props.addExpense) {
       window.location.reload();
     }
-    if(prevState.postComment !== this.props.postComment){
-      await this.props.getAllExpensesRedux({ group_id: this.props.match.params.id });
-    }
-    if(prevState.deleteComment !== this.props.deleteComment){
-      await this.props.getAllExpensesRedux({ group_id: this.props.match.params.id });
-    }
+    // if(prevState.postComment !== this.props.postComment){
+    //   await this.props.getAllExpensesRedux({ group_id: this.props.match.params.id });
+    // }
+    // if(prevState.deleteComment !== this.props.deleteComment){
+    //   await this.props.getAllExpensesRedux({ group_id: this.props.match.params.id });
+    // }
   }
 
   render() {
     // console.log("STATE in GROU INFOOOO---", this.state);
-    const userPreferredCurrency = null;
+    const userPreferredCurrency = getUserCurrency();
     let disableExitGroup = false;
-    const id =null;
-    const currentGroupInfo = null;
+    const { id } = this.props.match.params;
+    const currentGroupInfo = getGroupsInfo().find(group => group.group_id == id);
     var userProfileJSON = getUserProfile();
     // console.log("props in groupinfo", this.props, this.state);
     let tableData = "No data found. Please try adding an expense.";
@@ -131,8 +148,8 @@ class GroupInfo extends Component {
             <td>
               <Row >
                 <Col sm={1} style={{ paddingLeft: '2rem', color: '#999' }}>
-                  <Row style={{ fontSize: '12px' }}>{getMonthFromUtils(expense.created_date)}</Row>
-                  <Row style={{ fontSize: '20px' }}>{getDateFromUtils(expense.created_date)}</Row>
+                  <Row style={{ fontSize: '12px' }}>May</Row>
+                  <Row style={{ fontSize: '20px' }}>18</Row>
                 </Col>
                 <Col sm={7} style={{ margin: 'auto' }}>{expense.description}</Col>
                 <Col sm={2} style={{ color: '#999' }}><strong>{expense.paid_by === getUserID() ? `You ` : expense.paid_by_name}</strong> paid<br /><span style={{ color: 'black' }}><strong>{currencyConverter(userProfileJSON.currency)} {expense.amount}</strong></span></Col>
@@ -181,7 +198,7 @@ class GroupInfo extends Component {
     let userExpense = {};
     let userExpenseNames = {};
     let groupBalances = "No data found.";
-    // userExpense[getUserID()] = 0;
+    userExpense[getUserID()] = 0;
     if (this.state.allIndividualExpenses && this.state.allIndividualExpenses.length > 0 && this.state.allIndividualExpenses[0] && this.state.allIndividualExpenses[0].group_id && this.state.allExpenses && this.state.allExpenses.length > 0 && this.state.allExpenses[0] && this.state.allExpenses[0].group_id) {
       // this.state.allExpenses.forEach(expense => {
       //   userExpense[expense.paid_by] = 0;
@@ -223,7 +240,7 @@ class GroupInfo extends Component {
       })
     }
 
-    let disableLeaveGroup = false;
+    let disableLeaveGroup = Number(userExpense[getUserID()]) !== 0;
 
     return (
       <React.Fragment>
@@ -301,7 +318,7 @@ class GroupInfo extends Component {
                       </Col>
                       <Col>
                         <Row style={{ width: '100%' }}>
-                          <input type="text" className="form-control" name="description" id="description" onChange={(e) => this.setState({ description: e.target.value })} placeholder="Enter a description" title="Please enter a description" required />
+                          <input type="text" className="form-control" name="description" onChange={(e) => this.setState({ description: e.target.value })} placeholder="Enter a description" title="Please enter a description" required />
                         </Row>
                         <Row style={{ marginTop: '1rem' }}>
                           <Col sm={2} style={{ margin: 'auto' }}>{userPreferredCurrency}</Col>
@@ -331,18 +348,6 @@ class GroupInfo extends Component {
     );
   }
 }
-
-const mapStateToProps = state => {
-  console.log("state mapstatetoprops in dashboard", state);
-  return ({
-    allExpenses: state.groupsInfo.allExpenses,
-    allIndividualExpenses: state.groupsInfo.allIndividualExpenses,
-    addExpense: state.groupsInfo.addExpense,
-    exitGroup: state.groupsInfo.exitGroup,
-    postComment: state.groupsInfo.postComment,
-    deleteComment: state.groupsInfo.deleteComment
-  });
-}
-
-export default connect(mapStateToProps, { getAllExpensesRedux, getAllIndividualExpensesRedux, addExpenseRedux, exitGroupRedux, postCommentRedux, deleteCommentRedux })(GroupInfo);
-
+export default withApollo(graphql(addExpenseMutation, { name: 'addExpenseMutation' })(
+  GroupInfo
+));

@@ -26,6 +26,7 @@ class Login extends Component {
             variables: { email: this.state.email,
                       password: this.state.password },
           });
+          console.log("RESPONSE OBJECT FROM LOGIN:",data);
         this.setState({
             loginClicked: true,
             loginResp :data.login

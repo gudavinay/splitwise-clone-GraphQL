@@ -32,8 +32,49 @@ query{
   }
 }`;
 
+
+const getAllExpensesQuery = gql`
+query($group_id: String) {
+  getAllExpenses(group_id:$group_id){
+    group_id
+    description
+    paid_by
+    amount
+    created_date
+    updated_date
+    paid_to_users{
+      paid_to
+      amount
+      settled
+      _id
+    }
+  }
+}`;
+
+
+const getAllIndividualExpensesQuery = gql`
+query($group_id: String) {
+  getAllIndividualExpensesQuery(group_id:$group_id){
+    group_id
+    description
+    paid_by
+    amount
+    created_date
+    updated_date
+    paid_to_users{
+      paid_to
+      amount
+      settled
+      _id
+    }
+  }
+}`;
+
+
 export {
   loginQuery,
   fetchGroupsQuery,
   fetchUsersQuery,
+  getAllExpensesQuery,
+  getAllIndividualExpensesQuery,
 };

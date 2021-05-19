@@ -12,16 +12,16 @@ class UserProfile extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            // name: getUserName(),
-            // email: getUserEmail().toLowerCase(),
-            // phone: getUserPhone(),
-            // currency: getUserCurrencyDesc(),
-            // language: getUserLanguage(),
-            // timezone: getUserTimezone(),
-            // s3URL: getProfilePicture(),
-            // saveSuccess: false,
-            // saveFailed: false,
-            // userProfile: getUserProfile()
+            name: getUserName(),
+            email: getUserEmail().toLowerCase(),
+            phone: getUserPhone(),
+            currency: getUserCurrencyDesc(),
+            language: getUserLanguage(),
+            timezone: getUserTimezone(),
+            s3URL: getProfilePicture(),
+            saveSuccess: false,
+            saveFailed: false,
+            userProfile: getUserProfile()
         }
     }
 

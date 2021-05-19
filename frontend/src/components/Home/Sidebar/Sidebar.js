@@ -23,6 +23,7 @@ class Sidebar extends Component {
             variables: { user_id:getUserID()},
           });
           this.setState({groups:JSON.parse(data.fetchGroups)});
+          localStorage.setItem("groupsInfo", data.fetchGroups)
     }
 
     // componentDidUpdate(prevState){
